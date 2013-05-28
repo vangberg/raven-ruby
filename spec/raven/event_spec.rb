@@ -324,6 +324,20 @@ describe Raven::Event do
             hash['sentry.interfaces.Stacktrace']['frames'][3]['in_app'].should eq(true)
           end
         end
+
+        context 'with internal backtrace' do
+          let(:exception) do
+            e = Exception.new(message)
+            e.stub(:backtrace).and_return(["<internal:prelude>:10:in `synchronize'"])
+            e
+          end
+
+          it 'marks filename and in_app correctly' do
+            Raven.configuration.project_root.should eq('/rails/root')
+            hash['sentry.interfaces.Stacktrace']['frames'].last['filename'].should eq("<internal:prelude>")
+            hash['sentry.interfaces.Stacktrace']['frames'].last['in_app'].should eq(false)
+          end
+        end
       end
 
       it "sets the culprit" do
